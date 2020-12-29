@@ -7,39 +7,70 @@ def substring_frequencies(text):
     Returns an unsorted iterable of (substring, frequency) tuples. The
     frequencies include all overlapping occurrences of a substring.
     
-    The runtime is linear O(n) in the input text length n.
+    The runtime is O(n^2) in the input text length n.
     """
     if text == '':
         return []
 
     tree = STree.STree(text)
-    for (prefix, suffix, freq) in _frequent_substrings_recursive(tree, tree.root, '', 0)[1]:
+    for (prefix, suffix, freq) in _find_substrings(tree):
         for s in prefixes(suffix):
             yield (prefix + s, freq)
 
 
-def _frequent_substrings_recursive(tree, node, text, level):
-    edge_label = tree._edgeLabel(node, node.parent)
-    
-    if node.is_leaf():
-        assert edge_label and _is_terminator(edge_label[-1])
+def _find_substrings(tree):
+    root = tree.root
+    # Stack: (node, tree level, is pre step)
+    stack = [(root, 0, True)]
+    # Accumulator for frequencies: freq_acc[i] is the (partial) sum of
+    # substring frequencies at tree depth i. It is the total frequency
+    # at depth i at post-step phase when every descendant node has
+    # been processed.
+    freq_acc = []
+    # path_label[i] is the label on the i:th edge along the path from
+    # the root to the current node.
+    path_labels = []
+    prev_level = -1
 
-        if len(edge_label) == 1:
-            return (1, [])
-        else:
-            return (1, [(text, edge_label[:-1], 1)])
-    else:
-        child_freqs = []
-        freq = 0
-        for n in node.transition_links.values():
-            f, child_texts = _frequent_substrings_recursive(tree, n, text + edge_label, level + 1)
-            freq += f
-            child_freqs.extend(child_texts)
+    while stack:
+        node, level, prestep = stack.pop()
+        edge_label = tree._edgeLabel(node, node.parent)
 
-        if text or edge_label:
-            return (freq, [(text, edge_label, freq)] + child_freqs)
+        if prestep:
+            # pre-step: push the post-step and children to the stack
+            #
+            # The root node is skipped as a minor optimization.
+            if node is not root:
+                stack.append((node, level, False))
+
+            if node.transition_links:
+                stack.extend(
+                    (child, level + 1, True) for child in node.transition_links.values()
+                )
+                freq_acc.append(0)
+                path_labels.append(edge_label)
+
         else:
-            return (freq, child_freqs)
+            # post-step: all children have been processed and we have
+            # the frequency. Yield current node's label and frequency.
+
+            freq = 0
+            if level < prev_level:
+                freq = freq_acc.pop()
+                path_labels.pop()
+            elif node.is_leaf():
+                freq = 1
+
+                assert edge_label and _is_terminator(edge_label[-1])
+                edge_label = edge_label[:-1]
+
+            freq_acc[-1] += freq
+
+            text = ''.join(path_labels)
+            if text or edge_label:
+                yield (text, edge_label, freq)
+
+            prev_level = level
 
 
 def _is_terminator(c):
@@ -52,8 +83,8 @@ def _is_terminator(c):
 def substring_frequencies_slow(text):
     """Get all substrings of text and their frequencies.
 
-    Like substring_frequencies(), but the runtime is asymptotically
-    slower O(n^2).
+    The output equals to substring_frequencies() but this is
+    asymptotically slower and uses more memory.
     """
     substrings = set(text[i:j]
                      for i in range(len(text))
