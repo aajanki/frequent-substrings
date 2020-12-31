@@ -1,12 +1,21 @@
 import pytest
+from collections import Counter
+from functools import reduce
+from operator import add
 from src.freqsubs import find_substrings, find_substrings_slow, \
     find_frequent_substrings, find_frequent_substrings_slow
 
 doppler_text = "Doppler spectroscopy (also known as the radial-velocity method, or colloquially, the wobble method) is an indirect method for finding extrasolar planets and brown dwarfs from radial-velocity measurements via observation of Doppler shifts in the spectrum of the planet's parent star."
 
+tabby_text = "Tabby's Star\nTabby's Star (also known as Boyajian's Star and WTF Star, and designated KIC 8462852 in the Kepler Input Catalog) is an F-type main-sequence star in the constellation Cygnus approximately 1,470 light-years (450 pc) from Earth. Unusual light fluctuations of the star, including up to a 22% dimming in brightness, were discovered by citizen scientists as part of the Planet Hunters project."
+
 
 def test_empty():
     assert list(find_substrings('')) == []
+
+
+def test_empty_list():
+    assert list(find_substrings([])) == []
 
 
 def test_one():
@@ -60,8 +69,23 @@ def test_substrings_doppler():
     assert sorted(find_substrings(doppler_text)) == sorted(find_substrings_slow(doppler_text))
 
 
+def test_substrings_multi_input():
+    inputs = [
+        'banana',
+        'national',
+        'barbarian',
+    ]
+
+    merged = reduce(add, (Counter(dict(find_substrings(x))) for x in inputs))
+    assert dict(find_substrings(inputs)) == merged
+
+
 def test_frequent_empty():
     assert list(find_frequent_substrings('', 1)) == []
+
+
+def test_frequent_empty_list():
+    assert list(find_frequent_substrings([], 1)) == []
 
 
 def test_frequent_one():
@@ -96,3 +120,10 @@ def test_frequent_banana():
 def test_frequent_doppler(min_support, min_length):
     assert sorted(find_frequent_substrings(doppler_text, min_support, min_length)) == \
         sorted(find_frequent_substrings_slow(doppler_text, min_support, min_length))
+
+
+def test_frequent_multi_input():
+    counts = dict(find_frequent_substrings([doppler_text, tabby_text],
+                                           min_support=2, min_length=6))
+    assert counts['also known as '] == 2
+    assert counts['of the '] ==  3

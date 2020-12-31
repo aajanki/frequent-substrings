@@ -1,9 +1,9 @@
 from suffix_trees import STree  # type: ignore
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Union
 
 
 def find_frequent_substrings(
-        text: str,
+        inputs: Union[str, Iterable[str]],
         min_support: int,
         min_length: int = 1
 ) -> Iterable[Tuple[str, int]]:
@@ -18,28 +18,33 @@ def find_frequent_substrings(
     The runtime and memory requirement are linear O(n), where n is the
     length of the input text.
     """
-    if text == '':
+    if inputs == '':
         return []
 
-    tree = STree.STree(text)
+    tree = STree.STree(inputs)
     for (prefix, suffix, freq) in _find_substrings(tree, min_support, only_dominating_substrings=True):
         text = prefix + suffix
         if len(text) >= min_length:
             yield (text, freq)
 
 
-def find_substrings(text: str) -> Iterable[Tuple[str, int]]:
+def find_substrings(inputs: Union[str, Iterable[str]]) -> Iterable[Tuple[str, int]]:
     """Find all substrings of text and their frequencies.
 
+    The input can be either a string or an iterable of strings.
+
     Returns an unsorted iterable of (substring, frequency) tuples. The
-    frequencies include all overlapping occurrences of a substring.
+    frequencies include all overlapping occurrences of a substring. If
+    the input is an iterable of strings, the output contains
+    substrings from any of the inputs and the frequencies are the
+    combined occurrence counts.
     
     The runtime is O(n^2) in the input text length n.
     """
-    if text == '':
+    if inputs == '':
         return []
 
-    tree = STree.STree(text)
+    tree = STree.STree(inputs)
     for (prefix, suffix, freq) in _find_substrings(tree):
         for s in prefixes(suffix):
             yield (prefix + s, freq)
@@ -98,8 +103,10 @@ def _find_substrings(
             elif node.is_leaf():
                 freq = 1
 
-                assert edge_label and _is_terminator(edge_label[-1])
-                edge_label = edge_label[:-1]
+                # TODO: fix the tree builder so that the edge label
+                # stops at the first terminator.
+                i = _find_terminator(edge_label)
+                edge_label = edge_label[:i]
 
             freq_acc[-1] += freq
 
@@ -116,6 +123,10 @@ def _is_terminator(c: str) -> bool:
     return (i in range(0xE000, 0xF8FF+1) or
             i in range(0xF0000, 0xFFFFD+1) or
             i in range(0x100000, 0x10FFFD+1))
+
+
+def _find_terminator(s: str) -> int:
+    return next(i for i, c in enumerate(s) if _is_terminator(c))
 
 
 def find_frequent_substrings_slow(text: str, min_support: int, min_length: int = 1) -> Iterable[Tuple[str, int]]:
