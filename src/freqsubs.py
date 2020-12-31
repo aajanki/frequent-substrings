@@ -129,53 +129,6 @@ def _find_terminator(s: str) -> int:
     return next(i for i, c in enumerate(s) if _is_terminator(c))
 
 
-def find_frequent_substrings_slow(text: str, min_support: int, min_length: int = 1) -> Iterable[Tuple[str, int]]:
-    """Find frequent substrings of text.
-
-    Like find_frequent_substrings() but asymptotically slower O(n^2).
-    """
-    substrings = (
-        x for x in find_substrings_slow(text)
-        if len(x[0]) >= min_length and x[1] >= min_support)
-    substrings_sorted = sorted(substrings)
-
-    frequent = []
-    for candidate, next_candidate in zip(substrings_sorted[:-1], substrings_sorted[1:]):
-        if not next_candidate[0].startswith(candidate[0]):
-            frequent.append(candidate)
-
-    if substrings_sorted:
-        frequent.append(substrings_sorted[-1])
-
-    return frequent
-
-
-def find_substrings_slow(text: str) -> Iterable[Tuple[str, int]]:
-    """Get all substrings of text and their frequencies.
-
-    The output equals to find_substrings() but this is asymptotically
-    slower and uses more memory.
-    """
-    substrings = set(text[i:j]
-                     for i in range(len(text))
-                     for j in range(i+1, len(text)+1))
-    return ((s, count_overlapping(text, s)) for s in substrings)
-
-
 def prefixes(s: str) -> Iterable[str]:
     for i in range(1, len(s) + 1):
         yield s[:i]
-
-
-def count_overlapping(text: str, sub: str) -> int:
-    """The number of overlapping occurrences of the substring sub in text."""
-    count = 0
-    start = 0
-    i = 0
-    while i >= 0:
-        i = text.find(sub, start)
-        if i >= 0:
-            count += 1
-            start = i+1
-
-    return count

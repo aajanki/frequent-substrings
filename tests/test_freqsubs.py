@@ -2,8 +2,8 @@ import pytest
 from collections import Counter
 from functools import reduce
 from operator import add
-from src.freqsubs import find_substrings, find_substrings_slow, \
-    find_frequent_substrings, find_frequent_substrings_slow
+from src.freqsubs import find_substrings, find_frequent_substrings
+from utils import find_substrings_slow, find_frequent_substrings_slow
 
 doppler_text = "Doppler spectroscopy (also known as the radial-velocity method, or colloquially, the wobble method) is an indirect method for finding extrasolar planets and brown dwarfs from radial-velocity measurements via observation of Doppler shifts in the spectrum of the planet's parent star."
 
