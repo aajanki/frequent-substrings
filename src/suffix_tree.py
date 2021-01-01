@@ -2,11 +2,11 @@ from collections import Counter
 
 
 class SuffixTreeNode:
+    __slots__ = ['children', 'start', '_end', 'suffix_link', 'string_id',
+                 'string_ids', 'parent', 'dfs_num']
+    
     leaf_end = -1
 
-    # TODO: Only used for visualization during construction right now.  We can just use dfs_num later
-    num_nodes_created = 0
-    
     def __init__(self, start, end=None, string_id=None, start_idx=None):
         self.children = {}
         self.start = start
@@ -14,12 +14,7 @@ class SuffixTreeNode:
         self.suffix_link = None
         self.string_id = string_id
         self.string_ids = [string_id]
-        self.start_idxs = [start_idx]
         self.parent = None
-
-        # TODO: See note about num_nodes_created
-        self.num = str(SuffixTreeNode.num_nodes_created)
-        SuffixTreeNode.num_nodes_created += 1
         
 
     @property
@@ -113,7 +108,6 @@ class SuffixTree:
                 elif self._strings[next_node.string_id][next_node.start + self._active_length] == c:
                     if c == self._terminal_character:
                         next_node.string_ids.append(self._string_id)
-                        next_node.start_idxs.append(self._start_idx)
                         self._start_idx += 1
                         if not self._terminal_er3:
                             self._add_suffix_link(self._active_node)
@@ -211,18 +205,6 @@ class SuffixTree:
 
         f(node)
         return leaves
-                
-
-    def find(self, s):
-        node = self._find_node(s)
-        if not node:
-            return []
-        
-        leaves = self._leaves_of_node(node)
-        ids_and_indexes = []
-        for leaf in leaves:
-            ids_and_indexes += list(zip(leaf.string_ids, leaf.start_idxs))
-        return ids_and_indexes
 
 
     def lcs(self):
@@ -330,46 +312,7 @@ class SuffixTree:
         if string[-1] == self._terminal_character:
             return string[:-1]
         return string
-    
 
-    def _create_graph(self, graph, suffix_link, node):
-##        dfs_num = str(node.dfs_num)
-        # Leaves
-        if not node.children:
-            graph.node(node.num, f'{node.dfs_num}: ' + ', '.join([f'({i}, {j})' for i, j in zip(node.string_ids, node.start_idxs)]), shape='rect', fontsize='10')
-##            graph.node(node.num, str(node.dfs_num) + ': ' + ', '.join(str(i) for i in node.string_ids), shape='circle', fontsize='10')
-##            graph.node(node.num, str(node.dfs_num) + ", " + bin(node.dfs_num)[2:])
-##            graph.node(node.num, str(node.dfs_num))
-            
-        # Internal nodes
-        if node.children:
-##            graph.node(node.num, '')
-##            graph.node(node.num, str(node.dfs_num) + ", " + bin(node.dfs_num)[2:])
-            graph.node(node.num, str(node.dfs_num))
-            # SL Links
-            if suffix_link and node.suffix_link:
-                graph.edge(node.num, node.suffix_link.num, style='dotted')
-
-            for child in node.children.values():
-                # Edges
-                graph.edge(node.num, child.num, label=self._strings[child.string_id][child.start:child.end + 1])
-                self._create_graph(graph, suffix_link, child)
-                
-
-    def create_graph(self, suffix_link=False):
-        import os
-        # The os.environ['PATH'] variable is diffferent sometimes depending on how Python is instantiated
-        # Works fine from terminal
-        os.environ["PATH"] += os.pathsep + '/usr/local/bin'
-        from graphviz import Digraph
-        
-        graph = Digraph(graph_attr={'rankdir': 'LR'},
-                        node_attr={'shape': 'circle', 'height': '0.1', 'weight': '0.1'},
-                        edge_attr={'arrowsize': '0.4', 'fontsize': '10', 'weight': '3'})
-        self._create_graph(graph, suffix_link, self._root)
-        return graph
-            
-    
 
 class LCA:
     def __init__(self, root):
@@ -507,27 +450,6 @@ class LCA:
     
 
 
-##test = SuffixTree(['abcabxabcd'])
-##test = SuffixTree(['abcab'])
-##test = SuffixTree(['abcdababe'])
-##test = SuffixTree(['abcabxabcd', 'abcdababe'])
-##test = SuffixTree(['xabxa'])
-##test = SuffixTree(['xabxa', 'babxba'])
-##test = SuffixTree(['abc', 'bc'])
-##test = SuffixTree(['aaaacbbbedddd', 'aaaadbbbfddddc', 'c'])
-##test = SuffixTree(['GATTACA', 'TAGACCA', 'ATACA'])
-##test = SuffixTree(['aaacaaa', 'aaadaaa'])
-##test = SuffixTree(['abcdef', 'ghijk'])
-##test = SuffixTree(['sandollar', 'sandlot', 'handler', 'grand', 'pantry'])
-##test = SuffixTree(['abcdefabxybcdmnabcdex'])
-##test = SuffixTree(['forgeeksskeegfor', 'forgeeksskeegfor'[::-1]])
-##test = SuffixTree(['babad', 'babad'[::-1]])
-##test = SuffixTree(['cbbd', 'cbbd'[::-1]])
-
-##graph = test.create_graph(False)
-##graph.render('/tmp/test.gv', view=True)
-##print(test.find('ab'))
-##print(test.lcs())
 
 
 
