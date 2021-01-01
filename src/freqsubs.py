@@ -1,4 +1,4 @@
-from suffix_trees import STree  # type: ignore
+from .suffix_tree import SuffixTree  # type: ignore
 from typing import Iterable, Tuple, Union
 
 
@@ -18,10 +18,13 @@ def find_frequent_substrings(
     The runtime and memory requirement are linear O(n), where n is the
     length of the input text.
     """
-    if inputs == '':
+    if inputs == '' or inputs == []:
         return []
 
-    tree = STree.STree(inputs)
+    if isinstance(inputs, str):
+        inputs = [inputs]
+
+    tree = SuffixTree(inputs)
     for (prefix, suffix, freq) in _find_substrings(tree, min_support, only_dominating_substrings=True):
         text = prefix + suffix
         if len(text) >= min_length:
@@ -41,21 +44,24 @@ def find_substrings(inputs: Union[str, Iterable[str]]) -> Iterable[Tuple[str, in
     
     The runtime is O(n^2) in the input text length n.
     """
-    if inputs == '':
+    if inputs == '' or inputs == []:
         return []
 
-    tree = STree.STree(inputs)
+    if isinstance(inputs, str):
+        inputs = [inputs]
+
+    tree = SuffixTree(inputs)
     for (prefix, suffix, freq) in _find_substrings(tree):
         for s in prefixes(suffix):
             yield (prefix + s, freq)
 
 
 def _find_substrings(
-        tree: STree.STree,
+        tree: SuffixTree,
         min_support: int = 1,
         only_dominating_substrings: bool = False
 ) -> Iterable[Tuple[str, str, int]]:
-    root = tree.root
+    root = tree._root
     # Stack: (node, tree level, is pre step)
     stack = [(root, 0, True)]
     # Accumulator for frequencies: freq_acc[i] is the (partial) sum of
@@ -74,7 +80,7 @@ def _find_substrings(
 
     while stack:
         node, level, prestep = stack.pop()
-        edge_label = tree._edgeLabel(node, node.parent)
+        edge_label = _edge_label(tree, node)
 
         if prestep:
             # pre-step: push the post-step and children to the stack
@@ -83,9 +89,9 @@ def _find_substrings(
             if node is not root:
                 stack.append((node, level, False))
 
-            if node.transition_links:
+            if node.children:
                 stack.extend(
-                    (child, level + 1, True) for child in node.transition_links.values()
+                    (child, level + 1, True) for child in node.children.values()
                 )
                 freq_acc.append(0)
                 path_labels.append(edge_label)
@@ -100,13 +106,8 @@ def _find_substrings(
                 freq = freq_acc.pop()
                 path_labels.pop()
                 dominated = child_has_yielded.pop() and only_dominating_substrings
-            elif node.is_leaf():
+            elif not node.children:
                 freq = 1
-
-                # TODO: fix the tree builder so that the edge label
-                # stops at the first terminator.
-                i = _find_terminator(edge_label)
-                edge_label = edge_label[:i]
 
             freq_acc[-1] += freq
 
@@ -118,17 +119,17 @@ def _find_substrings(
             prev_level = level
 
 
-def _is_terminator(c: str) -> bool:
-    i = ord(c)
-    return (i in range(0xE000, 0xF8FF+1) or
-            i in range(0xF0000, 0xFFFFD+1) or
-            i in range(0x100000, 0x10FFFD+1))
-
-
-def _find_terminator(s: str) -> int:
-    return next(i for i, c in enumerate(s) if _is_terminator(c))
-
-
 def prefixes(s: str) -> Iterable[str]:
     for i in range(1, len(s) + 1):
         yield s[:i]
+
+
+def _edge_label(tree: SuffixTree, node) -> str:
+    if node is tree._root:
+        return ''
+
+    label = tree._strings[node.string_id][node.start:node.end + 1]
+    if label[-1] == tree._terminal_character:
+        label = label[:-1]
+
+    return label
