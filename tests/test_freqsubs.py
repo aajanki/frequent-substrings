@@ -96,13 +96,10 @@ def test_frequent_one():
 
 def test_frequent_banana():
     banana_1 = [
-        ('anana', 1),
         ('banana', 1),
-        ('nana', 1)
     ]
     banana_2 = [
         ('ana', 2),
-        ('na', 2)
     ]
     banana_3 = [
         ('a', 3)
@@ -112,6 +109,34 @@ def test_frequent_banana():
     assert sorted(find_frequent_substrings('banana', 2)) == banana_2
     assert sorted(find_frequent_substrings('banana', 3)) == banana_3
     assert sorted(find_frequent_substrings('banana', 4)) == []
+
+
+def test_frequent_bananaey():
+    text = 'banana banana banane banany'
+    assert sorted(find_frequent_substrings(text, 1)) == [(text, 1)]
+    assert sorted(find_frequent_substrings(text, 2)) == [('banana banan', 2)]
+    assert sorted(find_frequent_substrings(text, 3)) == [(' banan', 3)]
+    assert sorted(find_frequent_substrings(text, 4)) == [('banan', 4)]
+    assert sorted(find_frequent_substrings(text, 5)) == [('ana', 6)]
+    assert sorted(find_frequent_substrings(text, 6)) == [('ana', 6)]
+    assert sorted(find_frequent_substrings(text, 7)) == [('an', 8)]
+    assert sorted(find_frequent_substrings(text, 8)) == [('an', 8)]
+    assert sorted(find_frequent_substrings(text, 9)) == [('a', 10)]
+    assert sorted(find_frequent_substrings(text, 10)) == [('a', 10)]
+    assert sorted(find_frequent_substrings(text, 11)) == []
+
+
+def test_frequent_nanny_ogg():
+    assert sorted(find_frequent_substrings('bananana', 2)) == [('anana', 2)]
+
+
+def test_frequent_bananatural():
+    text = 'bananabananaturalnatural-natural:natural'
+    expected = [
+        ('banana', 2),
+        ('natural', 4)
+    ]
+    assert sorted(find_frequent_substrings(text, 2)) == expected
 
 
 @pytest.mark.parametrize("min_support,min_length",

@@ -12,15 +12,28 @@ def find_frequent_substrings_slow(text: str, min_support: int, min_length: int =
         if len(x[0]) >= min_length and x[1] >= min_support)
     substrings_sorted = sorted(substrings)
 
-    frequent = []
+    temp = []
     for candidate, next_candidate in zip(substrings_sorted[:-1], substrings_sorted[1:]):
         if not next_candidate[0].startswith(candidate[0]):
-            frequent.append(candidate)
+            temp.append(candidate)
 
     if substrings_sorted:
-        frequent.append(substrings_sorted[-1])
+        temp.append(substrings_sorted[-1])
+
+    frequent = []
+    temp = sorted(temp, key=lambda x: reversed_string(x[0]))
+    for candidate, next_candidate in zip(temp[:-1], temp[1:]):
+        if not next_candidate[0].endswith(candidate[0]):
+            frequent.append(candidate)
+
+    if temp:
+        frequent.append(temp[-1])
 
     return frequent
+
+
+def reversed_string(s):
+    return s[::-1]
 
 
 def find_substrings_slow(text: str) -> Iterable[Tuple[str, int]]:
