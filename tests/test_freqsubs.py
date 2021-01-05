@@ -150,5 +150,5 @@ def test_frequent_doppler(min_support, min_length):
 def test_frequent_multi_input():
     counts = dict(find_frequent_substrings([doppler_text, tabby_text],
                                            min_support=2, min_length=6))
-    assert counts['also known as '] == 2
-    assert counts['of the '] ==  3
+    assert counts[' (also known as '] == 2
+    assert counts[' of the '] ==  3

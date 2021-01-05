@@ -24,6 +24,11 @@ def find_frequent_substrings(
     if isinstance(inputs, str):
         inputs = [inputs]
 
+    return _collect_dominant_prefixes(
+        _substrings_from_tree(inputs, min_support, min_length))
+
+
+def _substrings_from_tree(inputs, min_support, min_length):
     tree = SuffixTree(inputs)
     for (prefix, suffix, freq) in _iter_substrings(tree, min_support, min_length, only_dominating_substrings=True):
         yield (prefix + suffix, freq)
@@ -137,3 +142,28 @@ def _edge_label(tree: SuffixTree, node) -> str:
         label = label[:-1]
 
     return label
+
+
+def _collect_dominant_prefixes(substrings_and_frequencies):
+    frequent = []
+    for x in substrings_and_frequencies:
+        i = _find_prefix_index(frequent, x[0])
+        if i is None:
+            pass
+        elif i >= 0:
+            frequent[i] = x
+        else:
+            frequent.append(x)
+
+    return frequent
+
+
+def _find_prefix_index(frequent, x):
+    found = False
+    for i, (y, _) in enumerate(frequent):
+        if y.endswith(x):
+            return None
+        elif x.endswith(y):
+            return i
+
+    return -1
