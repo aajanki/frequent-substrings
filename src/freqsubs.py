@@ -25,10 +25,8 @@ def find_frequent_substrings(
         inputs = [inputs]
 
     tree = SuffixTree(inputs)
-    for (prefix, suffix, freq) in _find_substrings(tree, min_support, only_dominating_substrings=True):
-        text = prefix + suffix
-        if len(text) >= min_length:
-            yield (text, freq)
+    for (prefix, suffix, freq) in _iter_substrings(tree, min_support, min_length, only_dominating_substrings=True):
+        yield (prefix + suffix, freq)
 
 
 def find_substrings(inputs: Union[str, Iterable[str]]) -> Iterable[Tuple[str, int]]:
@@ -51,14 +49,15 @@ def find_substrings(inputs: Union[str, Iterable[str]]) -> Iterable[Tuple[str, in
         inputs = [inputs]
 
     tree = SuffixTree(inputs)
-    for (prefix, suffix, freq) in _find_substrings(tree):
+    for (prefix, suffix, freq) in _iter_substrings(tree):
         for s in prefixes(suffix):
             yield (prefix + s, freq)
 
 
-def _find_substrings(
+def _iter_substrings(
         tree: SuffixTree,
         min_support: int = 1,
+        min_length: int = 1,
         only_dominating_substrings: bool = False
 ) -> Iterable[Tuple[str, str, int]]:
     root = tree._root
@@ -112,7 +111,12 @@ def _find_substrings(
             freq_acc[-1] += freq
 
             text = ''.join(path_labels)
-            if freq >= min_support and not dominated and edge_label:
+            num_chars = len(text) + len(edge_label)
+            if (freq >= min_support
+                and num_chars >= min_length
+                and not dominated
+                and edge_label
+            ):
                 child_has_yielded = [True for _ in child_has_yielded]
                 yield (text, edge_label, freq)
 
