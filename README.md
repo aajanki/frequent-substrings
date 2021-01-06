@@ -26,6 +26,13 @@ The input can also be a list of strings.
 python -m pytest tests
 ```
 
+## To do
+
+* Find a suffix tree implementation with a lower memory footprint
+* Whole words substrings (starting and ending on word boundaries)
+* Input as an iterable of strings instead of a concrete list (construct the suffix tree online)
+* Optimize the maximal substring search
+
 ## Acknowledgements
 
 The suffix tree implementation is based on https://github.com/Reddy2/suffix-tree by [Reddy2](https://github.com/Reddy2). It is shared under the MIT license.
