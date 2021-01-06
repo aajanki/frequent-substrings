@@ -13,10 +13,12 @@ def find_frequent_substrings(
     output contains substrings that occur at least min_support times
     and are at least min_length characters long. The output includes
     only the longest possible substrings, that is no substring in the
-    output is a prefix of another.
+    output is a substring of another.
 
-    The runtime and memory requirement are linear O(n), where n is the
-    length of the input text.
+    The runtime and memory requirement are O(n^2) in the worst case,
+    where n is the length of the input text. In practice, the
+    performance is relatively fast with sufficiently large min_support
+    and min_length (i.e. when the number of output strings is low).
     """
     if inputs == '' or inputs == []:
         return []
@@ -24,13 +26,13 @@ def find_frequent_substrings(
     if isinstance(inputs, str):
         inputs = [inputs]
 
-    return _collect_dominant_prefixes(
+    return _collect_maximal_substrings(
         _substrings_from_tree(inputs, min_support, min_length))
 
 
 def _substrings_from_tree(inputs, min_support, min_length):
     tree = SuffixTree(inputs)
-    for (prefix, suffix, freq) in _iter_substrings(tree, min_support, min_length, only_dominating_substrings=True):
+    for (prefix, suffix, freq) in _iter_substrings(tree, min_support, min_length, only_maximal_prefixes=True):
         yield (prefix + suffix, freq)
 
 
@@ -55,7 +57,7 @@ def find_substrings(inputs: Union[str, Iterable[str]]) -> Iterable[Tuple[str, in
 
     tree = SuffixTree(inputs)
     for (prefix, suffix, freq) in _iter_substrings(tree):
-        for s in prefixes(suffix):
+        for s in _prefixes(suffix):
             yield (prefix + s, freq)
 
 
@@ -63,7 +65,7 @@ def _iter_substrings(
         tree: SuffixTree,
         min_support: int = 1,
         min_length: int = 1,
-        only_dominating_substrings: bool = False
+        only_maximal_prefixes: bool = False
 ) -> Iterable[Tuple[str, str, int]]:
     root = tree._root
     # Stack: (node, tree level, is pre step)
@@ -109,7 +111,7 @@ def _iter_substrings(
             if level < prev_level:
                 freq = freq_acc.pop()
                 path_labels.pop()
-                dominated = child_has_yielded.pop() and only_dominating_substrings
+                dominated = child_has_yielded.pop() and only_maximal_prefixes
             elif not node.children:
                 freq = 1
 
@@ -128,7 +130,7 @@ def _iter_substrings(
             prev_level = level
 
 
-def prefixes(s: str) -> Iterable[str]:
+def _prefixes(s: str) -> Iterable[str]:
     for i in range(1, len(s) + 1):
         yield s[:i]
 
@@ -144,7 +146,12 @@ def _edge_label(tree: SuffixTree, node) -> str:
     return label
 
 
-def _collect_dominant_prefixes(substrings_and_frequencies):
+def _collect_maximal_substrings(substrings_and_frequencies):
+    # Keep only those results that are not substrings of any other
+    # result string.
+    #
+    # Need to only compare postfixes, because the suffix tree iterator
+    # already handles prefixes.
     frequent = []
     for x in substrings_and_frequencies:
         i = _find_prefix_index(frequent, x[0])

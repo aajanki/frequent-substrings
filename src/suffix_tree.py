@@ -1,3 +1,7 @@
+# Based on https://github.com/Reddy2/suffix-tree by Reddy2 @ Github.
+#
+# Licensed under the MIT license.
+
 from collections import Counter
 
 
