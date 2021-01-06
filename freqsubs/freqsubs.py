@@ -13,10 +13,10 @@ def find_frequent_substrings(
     output contains substrings that occur at least min_support times
     and are at least min_length characters long. The output includes
     only the longest possible substrings, that is no substring in the
-    output is a substring of another.
+    output is a part of another.
 
-    The runtime and memory requirement are O(n^2) in the worst case,
-    where n is the length of the input text. In practice, the
+    The runtime and the memory requirement are O(n^2) in the worst
+    case (n is the length of the input text). In practice, the
     performance is relatively fast with sufficiently large min_support
     and min_length (i.e. when the number of output strings is low).
     """
