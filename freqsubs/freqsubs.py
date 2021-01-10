@@ -69,7 +69,7 @@ def _iter_substrings(
 ) -> Iterable[Tuple[str, str, int]]:
     root = tree._root
     # Stack: (node, tree level, is pre step)
-    stack = [(root, 0, True)]
+    stack = [(root, '', 0, True)]
     # Accumulator for frequencies: freq_acc[i] is the (partial) sum of
     # substring frequencies at tree depth i. It is the total frequency
     # at depth i at post-step phase when every descendant node has
@@ -85,19 +85,18 @@ def _iter_substrings(
     prev_level = -1
 
     while stack:
-        node, level, prestep = stack.pop()
-        edge_label = _edge_label(tree, node)
+        node, edge_label, level, prestep = stack.pop()
 
         if prestep:
             # pre-step: push the post-step and children to the stack
             #
             # The root node is skipped as a minor optimization.
             if node is not root:
-                stack.append((node, level, False))
+                stack.append((node, edge_label, level, False))
 
             if node.children:
                 stack.extend(
-                    (child, level + 1, True) for child in node.children.values()
+                    (child, _edge_label(tree, child), level + 1, True) for child in node.children.values()
                 )
                 freq_acc.append(0)
                 path_labels.append(edge_label)
