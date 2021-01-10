@@ -1,4 +1,5 @@
 from .suffix_tree import SuffixTree  # type: ignore
+from sortedcontainers import SortedKeyList
 from typing import Iterable, Tuple, Union
 
 
@@ -151,25 +152,18 @@ def _collect_maximal_substrings(substrings_and_frequencies):
     #
     # Need to only compare postfixes, because the suffix tree iterator
     # already handles prefixes.
-    frequent = []
+    collected = SortedKeyList(key=_reversed_substring)
     for x in substrings_and_frequencies:
-        i = _find_prefix_index(frequent, x[0])
-        if i is None:
-            pass
-        elif i >= 0:
-            frequent[i] = x
-        else:
-            frequent.append(x)
+        key = _reversed_substring(x)
+        i = collected.bisect_key_right(key)
+        if i > 0 and key.startswith(_reversed_substring(collected[i - 1])):
+            del collected[i - 1]
+            collected.add(x)
+        elif i == len(collected) or not _reversed_substring(collected[i]).startswith(key):
+            collected.add(x)
 
-    return frequent
+    return collected
 
 
-def _find_prefix_index(frequent, x):
-    found = False
-    for i, (y, _) in enumerate(frequent):
-        if y.endswith(x):
-            return None
-        elif x.endswith(y):
-            return i
-
-    return -1
+def _reversed_substring(x):
+    return x[0][::-1]

@@ -1,1 +1,2 @@
 pytest
+sortedcontainers>=2.3,<3.0

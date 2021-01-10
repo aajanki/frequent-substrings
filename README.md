@@ -31,7 +31,6 @@ python -m pytest tests
 * Find a suffix tree implementation with a lower memory footprint
 * Whole words substrings (starting and ending on word boundaries)
 * Input as an iterable of strings instead of a concrete list (construct the suffix tree online)
-* Optimize the maximal substring search
 
 ## Acknowledgements
 
