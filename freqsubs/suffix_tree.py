@@ -41,7 +41,7 @@ class SuffixTree:
         # TODO: Allow single strings
         self._string = strings[0]
         self._string_id = 0
-        self._terminal_character = '$'
+        self._terminal_character = '\ue000'
         self._strings = {i: strings[i] + self._terminal_character for i in range(len(strings))}  # TODO: Probably add something to ER3 rather than do + '$'
         self._start_idx = 0
         self._root = SuffixTreeNode(-1, -1)
